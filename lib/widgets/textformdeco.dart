@@ -7,7 +7,9 @@ class TextFormDeco extends StatelessWidget {
       // required this.validator,
       required this.icons,
       required this.inputType,
-      required this.validator});
+      required this.validator,
+      required,
+      required this.onSave});
 
   // const TextFormDeco(
   //   this.lableText,
@@ -24,6 +26,7 @@ class TextFormDeco extends StatelessWidget {
   final TextInputType inputType;
   final String? Function(String?)?
       validator; // Validation function as an argument
+  final String? Function(String) onSave;
 
   @override
   Widget build(BuildContext context) {
