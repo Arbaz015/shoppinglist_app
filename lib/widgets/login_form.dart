@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:ffi';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shoppinglist_app/model/login.dart';
 import 'package:shoppinglist_app/widgets/login_data.dart';
@@ -46,20 +47,29 @@ String? validateMobileNumber(String? value) {
 class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final Login login = Login();
-  // var _fName = '';
-  // var lName = '';
-  // var email = '';
-  // var mob;
+  var _fName = '';
+  var _lName = '';
+  var _email = '';
+  var _mob;
 
   void _saveItem() {
     _formKey.currentState!.validate();
     _formKey.currentState!.save();
-
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => LoginData(
-        login: login,
-      ),
-    ));
+    final url =
+        Uri.https('login-prep-ec492-default-rtdb.firebaseio.com', 'login.json');
+    http.post(url,
+        headers: {'content-Type': 'application/json'},
+        body: json.encode({
+          'firtName': _fName,
+          'lastName': _lName,
+          'emai': _email,
+          'mob': _mob
+        }));
+    // Navigator.of(context).push(MaterialPageRoute(
+    //   builder: (context) => LoginData(
+    //     login: login,
+    //   ),
+    // ));
   }
 
   @override
@@ -100,7 +110,8 @@ class _LoginFormState extends State<LoginForm> {
                               ),
                             ),
                             validator: validateName,
-                            onSaved: (newValue) => login.firstName = newValue!,
+                            // onSaved: (newValue) => login.firstName = newValue!, addoing value in getter and setter
+                            onSaved: (newValue) => _fName = newValue!,
                           ),
                           const SizedBox(
                             height: 15,
@@ -118,7 +129,8 @@ class _LoginFormState extends State<LoginForm> {
                               ),
                             ),
                             validator: validateName,
-                            onSaved: (newValue) => login.lastName = newValue!,
+                            // onSaved: (newValue) => login.lastName = newValue!,
+                            onSaved: (newValue) => _lName = newValue!,
                           ),
                           const SizedBox(
                             height: 15,
@@ -136,7 +148,8 @@ class _LoginFormState extends State<LoginForm> {
                               ),
                             ),
                             validator: validateName,
-                            onSaved: (newValue) => login.userEmail = newValue!,
+                            // onSaved: (newValue) => login.userEmail = newValue!,
+                            onSaved: (newValue) => _email = newValue!,
                           ),
                           const SizedBox(
                             height: 15,
@@ -154,8 +167,10 @@ class _LoginFormState extends State<LoginForm> {
                               ),
                             ),
                             validator: validateName,
-                            onSaved: (newValue) =>
-                                login.userMob = int.parse(newValue!),
+                            // onSaved: (newValue) =>
+                            //     login.userMob = int.parse(newValue!),
+
+                            onSaved: (newValue) => _mob = int.parse(newValue!),
                           ),
                           // TextFormDeco(
                           //   lableText: 'last name',
