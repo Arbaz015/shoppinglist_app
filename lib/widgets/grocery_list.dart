@@ -10,19 +10,26 @@ import 'package:shoppinglist_app/widgets/new_item.dart';
 
 class GroceryList extends StatefulWidget {
   @override
-  State<GroceryList> createState() => _GroceryListState();
+  State<GroceryList> createState() {
+    // TODO: implement createState
+    return _GroceryListState();
+  }
 }
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
-
+  String? _error = '';
+  var _isLoading = true;
   void _loadItems() async {
-    final url = Uri.https('shopping-list-5690c-default-rtdb.firebaseio.com',
-        'shopping-list.json');
+    final url = Uri.https(
+        'abc-list-5690c-default-rtdb.firebaseio.com', 'shopping-list.json');
 
     final response = await http.get(url);
     print(response.body);
 
+    if (response.statusCode >= 400) {
+      _error = 'Failed to fetch data. Please try again later..';
+    }
     final Map<String, dynamic> listData = json.decode(response.body);
     final List<GroceryItem> _loadedItems = [];
 
@@ -40,6 +47,7 @@ class _GroceryListState extends State<GroceryList> {
 
     setState(() {
       _groceryItems = _loadedItems;
+      _isLoading = false;
     });
   }
 
@@ -87,6 +95,12 @@ class _GroceryListState extends State<GroceryList> {
       ),
     );
 
+    if (_isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
@@ -108,6 +122,13 @@ class _GroceryListState extends State<GroceryList> {
         ),
       );
     }
+
+    if (_error != null) {
+      content = Center(
+        child: Text(_error!),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Groceries'),

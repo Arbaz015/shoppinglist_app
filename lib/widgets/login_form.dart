@@ -65,11 +65,9 @@ class _LoginFormState extends State<LoginForm> {
           'emai': _email,
           'mob': _mob
         }));
-    // Navigator.of(context).push(MaterialPageRoute(
-    //   builder: (context) => LoginData(
-    //     login: login,
-    //   ),
-    // ));
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => LoginData(),
+    ));
   }
 
   @override
