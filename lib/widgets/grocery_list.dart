@@ -18,37 +18,53 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
-  String? _error = '';
+  String? _error;
   var _isLoading = true;
   void _loadItems() async {
-    final url = Uri.https(
-        'abc-list-5690c-default-rtdb.firebaseio.com', 'shopping-list.json');
+    final url = Uri.https('shopping-list-5690c-default-rtdb.firebaseio.com',
+        'shopping-list.json');
 
-    final response = await http.get(url);
-    print(response.body);
+    try {
+      final response = await http.get(url);
+      print(response.body);
 
-    if (response.statusCode >= 400) {
-      _error = 'Failed to fetch data. Please try again later..';
+      if (response.statusCode >= 400) {
+        setState(() {
+          _error = 'Failed to fetch data. Please try again later..';
+        });
+      }
+
+      if (response.body == 'null') {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final Map<String, dynamic> listData = json.decode(response.body);
+      final List<GroceryItem> _loadedItems = [];
+
+      for (final item in listData.entries) {
+        final category = categories.entries
+            .firstWhere(
+                (catItem) => catItem.value.title == item.value['category'])
+            .value;
+        _loadedItems.add(GroceryItem(
+            id: item.key,
+            name: item.value['name'],
+            category: category,
+            quantity: item.value['quantity']));
+      }
+
+      setState(() {
+        _groceryItems = _loadedItems;
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _error = 'Something went wrong. Please try again later..';
+      });
     }
-    final Map<String, dynamic> listData = json.decode(response.body);
-    final List<GroceryItem> _loadedItems = [];
-
-    for (final item in listData.entries) {
-      final category = categories.entries
-          .firstWhere(
-              (catItem) => catItem.value.title == item.value['category'])
-          .value;
-      _loadedItems.add(GroceryItem(
-          id: item.key,
-          name: item.value['name'],
-          category: category,
-          quantity: item.value['quantity']));
-    }
-
-    setState(() {
-      _groceryItems = _loadedItems;
-      _isLoading = false;
-    });
   }
 
   @override
@@ -64,26 +80,49 @@ class _GroceryListState extends State<GroceryList> {
     _loadItems();
   }
 
-  void _removeItem(GroceryItem item) {
+  void _removeItem(GroceryItem item) async {
     final index = _groceryItems.indexOf(item);
 
     setState(() {
       _groceryItems.remove(item);
     });
+    final url = Uri.https('-list-5690c-default-rtdb.firebaseio.com',
+        'shopping-list/${item.id}.json');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${item.name} dismissed'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            setState(() {
-              _groceryItems.insert(index, item);
-            });
-          },
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      setState(() {
+        groceryItems.insert(index, item);
+      });
+
+      setState(() {
+        _groceryItems.remove(item);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${item.name} dismissed'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              _undoDelete(item);
+            },
+          ),
         ),
-      ),
-    );
+      );
+    }
+  }
+
+  void _undoDelete(GroceryItem item) {
+    final index = _groceryItems.indexOf(item);
+    final url = Uri.https('shopping-list-5690c-default-rtdb.firebaseio.com',
+        'shopping-list/${item.id}.json');
+
+    final response = http.put(url);
+
+    setState(() {
+      groceryItems.insert(index, item);
+    });
   }
 
   @override
